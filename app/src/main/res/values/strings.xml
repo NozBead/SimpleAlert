@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SimpleAlert</string>
+    <string name="server">http://funetdelire.fr:8080/</string>
+    <string name="channel_alert_id">SimpleAlertAlertNotif</string>
+    <string name="channel_alert_name">Alert</string>
+    <string name="channel_monitoring_id">SimpleAlertMonitoringNotif</string>
+    <string name="channel_monitoring_name">Monitoring</string>
+</resources>
