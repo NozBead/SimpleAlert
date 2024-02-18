@@ -16,16 +16,19 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import fr.funetdelire.simplealert.AlertPreferences
 import fr.funetdelire.simplealert.R
 import fr.funetdelire.simplealert.client.AlertClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class SimpleAlertService : Service() {
+    companion object {
+        var started = false;
+    }
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -87,16 +90,20 @@ class SimpleAlertService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val wakeLock = createWakeLock()
-        createChannel()
-        startForeground(2, createMonitorNotification(), FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        started = true
 
+        startForeground(2, createMonitorNotification(), FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        val preferences = AlertPreferences.getInstance(applicationContext)
+        createChannel()
+
+        val wakeLock = createWakeLock()
         wakeLock.acquire()
         val client = AlertClient.getClient(applicationContext.getString(R.string.server))
         coroutineScope.launch {
             while (true) {
                 getAlert(client)
-                delay(30.seconds)
+                val time = preferences.getTime()
+                delay(time.seconds)
             }
         }
         wakeLock.release()
