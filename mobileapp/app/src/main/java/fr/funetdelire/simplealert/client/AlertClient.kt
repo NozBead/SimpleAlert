@@ -11,15 +11,16 @@ interface AlertClient {
         private var INSTANCE: AlertClient? = null
 
         fun getClient(baseUrl : String): AlertClient {
-            return INSTANCE ?: synchronized(this) {
+            //return INSTANCE ?: synchronized(this) {
                 val retrofit = Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .addConverterFactory(ScalarsConverterFactory.create())
                     .build()
                 val instance = retrofit.create(AlertClient::class.java)
-                INSTANCE = instance
-                instance
-            }
+                //INSTANCE = instance
+                //instance
+                return instance
+            //}
         }
     }
 

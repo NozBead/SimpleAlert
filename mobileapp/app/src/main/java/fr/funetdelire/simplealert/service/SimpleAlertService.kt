@@ -12,6 +12,7 @@ import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -23,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.IOException
 import kotlin.time.Duration.Companion.seconds
 
 class SimpleAlertService : Service() {
@@ -74,8 +76,18 @@ class SimpleAlertService : Service() {
     }
 
     private fun getAlert(client: AlertClient) {
-        val message = client.getAlert().execute()
-        if (message.isSuccessful) {
+        var notif : String? = null;
+        try {
+            val message = client.getAlert().execute()
+            if (message.isSuccessful) {
+                notif = message.body()
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            notif = "Unreachable server"
+        }
+
+        if (notif != null) {
             with(NotificationManagerCompat.from(applicationContext)) {
                 if (ActivityCompat.checkSelfPermission(
                         applicationContext,
@@ -83,7 +95,7 @@ class SimpleAlertService : Service() {
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
                 }
-                notify(1, createAlertNotification(message.body()))
+                notify(1, createAlertNotification(notif))
             }
         }
     }
@@ -98,9 +110,10 @@ class SimpleAlertService : Service() {
 
         val wakeLock = createWakeLock()
         wakeLock.acquire()
-        val client = AlertClient.getClient(applicationContext.getString(R.string.server))
         coroutineScope.launch {
             while (true) {
+                Log.d("test", preferences.getServer())
+                val client = AlertClient.getClient(preferences.getServer())
                 getAlert(client)
                 val time = preferences.getTime()
                 delay(time.seconds)
